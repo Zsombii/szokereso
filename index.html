@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Szókereső Játék</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Qahiri&family=SUSE:wght@100..800&display=swap');
+        body {
+            font-family: 'Montserrat';
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background-color: #555555;
+        }
+
+        h2 {
+            margin-top: 20px;
+            font-size: 32px;
+            color: #ffffff;
+        }
+
+        .grid {
+            display: grid; 
+            grid-gap: 15px; 
+            margin-top: 20px; 
+            background-color: #fff;
+            padding: 15px 25px 15px 15px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        label {
+            color: #ffffff;
+            font-size: 22px;
+            margin: 5px;
+        }
+
+        .cell { 
+            width: 40px; 
+            height: 40px; 
+            text-align: center; 
+            border: 1px solid #aaa; 
+            cursor: pointer; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .cell:hover {
+            background-color: #ddd;
+            transform: scale(1.05);
+        }
+
+        .selected {
+            background-color: #4caf50; 
+            color: white;
+        }
+
+        #difficulty, #category {
+            border: 2px solid black;
+            border-radius: 10px;
+            font-size: 20px;
+            background-color: rgb(75, 75, 75);
+            color: rgb(218, 218, 218);
+        }
+
+        .found {
+            background-color: #2196f3 !important; 
+            color: white !important;
+        }
+
+        .marked {
+            border: 2px solid red !important;
+        }
+
+        .word-list {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .word-list h3 {
+            width: 100%;
+            text-align: center;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .word-list ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .word-list li {
+            font-size: 16px;
+            padding: 6px 12px;
+            background-color: #e0f7fa;
+            border: 1px solid #00bcd4;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #00796b;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s, transform 0.1s;
+        }
+
+        .word-list li:hover {
+            background-color: #b2ebf2;
+            transform: scale(1.05);
+        }
+
+        .word-list li.found {
+            background-color: #c8e6c9;
+            color: gray;
+            text-decoration: line-through;
+            border-color: #81c784;
+        }
+
+        #winMessage, #loseMessage {
+            display: none; 
+            font-size: 24px; 
+            font-weight: bold; 
+            margin-top: 20px;
+        }
+
+        #winMessage {
+            color: #4caf50;
+        }
+
+        #loseMessage {
+            color: #f44336;
+        }
+
+        #timer {
+            font-size: 24px; 
+            font-weight: bold; 
+            margin-top: 10px;
+            color: #333;
+        }
+
+        .controls {
+            display: flex; 
+            align-items: center; 
+            margin-top: 10px; 
+            gap: 10px; 
+            background-color: #eee; 
+            padding: 10px 20px; 
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 6px 12px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            border-radius: 5px;
+            border: 2px solid black;
+            background-color: white;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #a7a7a7;
+            transform: scale(1.05);
+        }
+
+        #newGameButton {
+            background-color: red; 
+            color: white; 
+            font-weight: bold; 
+            border: none; 
+            padding: 10px 15px; 
+            margin-top: 10px;
+        }
+
+        #newGameButton:hover {
+            background-color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <h2>Szókereső Játék</h2>
+
+    <div class="controls">
+        <button onclick="changeTime(-10)" id="changeTimeButtonMinus">⬅️ -10s</button>
+        <span id="timer">60</span> másodperc
+        <button onclick="changeTime(10)" id="changeTimeButtonPlus">+10s ➡️</button>
+    </div>
+
+    <button id="startButton" onclick="startGame()">🎮 Kezdés</button>
+    <button id="resetButton" onclick="resetGame()" style="display:none;">Újra Kezdés</button>
+    <button id="newGameButton" onclick="restartGame()">🔄 Új Játék</button>
+
+    <label for="difficulty">Nehézség:</label>
+    <select id="difficulty" onchange="setDifficulty()">
+        <option value="easy">Könnyű</option>
+        <option value="hard">Nehéz</option>
+    </select>
+
+    <label for="category">Kategória:</label>
+    <select id="category" onchange="setCategory()">
+        <option value="animals">Állatok</option>
+        <option value="countries">Országok</option>
+        <option value="persons">Személyek</option>
+        <option value="brands">Márkák</option>
+    </select>
+
+    <div class="grid" id="grid" style="display:none;"></div>
+    <div class="word-list" id="wordListContainer" style="display:none;">
+        <ul id="wordList"></ul>
+    </div>
+
+    <p id="winMessage">🎉Nyertél!🎉</p>
+    <p id="loseMessage">😞Vesztettél😞</p>
+
+    <script>
+        let timeLeft = 60;
+        let timerInterval = null;
+        let gameStarted = false;
+
+        function changeTime(amount) {
+            if (!gameStarted) {
+                timeLeft = Math.max(10, timeLeft + amount);
+                document.getElementById("timer").textContent = timeLeft;
+            }
+        }
+
+        function startGame() {
+            document.getElementById("grid").style.display = "grid";
+            document.getElementById("wordListContainer").style.display = "flex";
+            if (timerInterval) clearInterval(timerInterval);
+            gameStarted = true;
+            document.getElementById("winMessage").style.display = "none";
+            document.getElementById("loseMessage").style.display = "none";
+            document.getElementById("timer").textContent = timeLeft;
+            document.getElementById("resetButton").style.display = "inline-block";
+            document.getElementById("startButton").style.display = "none";
+
+            document.getElementById("category").style.display = "none";
+            document.getElementById("difficulty").style.display = "none";
+            document.querySelector('label[for="category"]').style.display = "none";
+            document.querySelector('label[for="difficulty"]').style.display = "none";
+
+            document.getElementById("category").disabled = true;
+            document.getElementById("difficulty").disabled = true;
+            document.getElementById("changeTimeButtonMinus").disabled = true; 
+            document.getElementById("changeTimeButtonPlus").disabled = true;
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById("loseMessage").style.display = "block";
+                    document.getElementById("resetButton").style.display = "inline-block";
+                    gameStarted = false;
+                    document.getElementById("startButton").style.display = "inline";
+                }
+            }, 1000);
+
+            setDifficulty();
+        }
+
+        const wordCategories = {
+            animals: {
+                easy: ["TATU", "NYÚL", "SAS", "HAL", "BÉKA"],
+                hard: ["HANGYÁSZ", "KROKODIL", "KENGURU", "CÁPA", "TEKNŐS"]
+            },
+            countries: {
+                easy: ["DÁNIA", "JAPÁN", "PERU", "KUBA", "KINA"],
+                hard: ["BRAZÍLIA", "ARGENTÍNA", "NÉMETORSZÁG", "SPANYOL", "KANADA"]
+            },
+            persons: {
+                easy: ["KARIGERI", "VIKTOR", "FERI", "MUSK", "TRUMP"],
+                hard: ["PUTYIN", "MATUSKA", "SZILÁGYI", "WEÖRES", "RÁKÓCZI"]
+            },
+            brands: {
+                easy: ["NIKE", "ADIDAS", "PEPSI", "NOKIA", "KFC"],
+                hard: ["SAMSUNG", "GIGABYTE", "HEINEKEN", "UNIVER", "CANON"]
+            }
+        };
+
+        let words = [];
+        let gridSize = 10;
+        const grid = document.getElementById("grid");
+        const wordList = document.getElementById("wordList");
+        let selectedCells = [];
+        let foundWords = [];
+        let usedCells = new Set();
+
+        function setCategory() {
+            const category = document.getElementById("category").value;
+            setDifficulty(category);
+        }
+
+        function setDifficulty(category = document.getElementById("category").value) {
+            const difficulty = document.getElementById("difficulty").value;
+            words = wordCategories[category][difficulty];
+            gridSize = difficulty === "easy" ? 8 : 12;
+            generateGrid();
+        }
+
+        function generateGrid() {
+            grid.innerHTML = "";
+            wordList.innerHTML = "";
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 30px)`;
+
+            let letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let board = Array.from({ length: gridSize }, () => Array(gridSize).fill(null));
+
+            words.forEach(word => {
+                if (!placeWord(word, board)) {
+                    console.warn(`Nem sikerült elhelyezni a(z) "${word}" szót.`);
+                }
+            });
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (!board[i][j]) {
+                        board[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    cell.textContent = board[i][j];
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.addEventListener("click", () => selectCell(cell));
+                    grid.appendChild(cell);
+                }
+            }
+
+            words.forEach(word => {
+                let li = document.createElement("li");
+                li.textContent = word;
+                li.dataset.word = word;
+                wordList.appendChild(li);
+            });
+        }
+
+        function placeWord(word, board) {
+            let directions = [
+                { row: 0, col: 1 },  
+                { row: 1, col: 0 },  
+                { row: 1, col: 1 },  
+                { row: -1, col: 1 }  
+            ];
+
+            let attempts = 0;
+            while (attempts < 100) {
+                let direction = directions[Math.floor(Math.random() * directions.length)];
+                let row = Math.floor(Math.random() * gridSize);
+                let col = Math.floor(Math.random() * gridSize);
+
+                if (canPlaceWord(word, board, row, col, direction)) {
+                    for (let i = 0; i < word.length; i++) {
+                        board[row + i * direction.row][col + i * direction.col] = word[i];
+                    }
+                    return true;
+                }
+                attempts++;
+            }
+            return false;
+        }
+
+        function canPlaceWord(word, board, row, col, direction) {
+            for (let i = 0; i < word.length; i++) {
+                let newRow = row + i * direction.row;
+                let newCol = col + i * direction.col;
+                if (newRow < 0 || newRow >= gridSize || newCol < 0 || newCol >= gridSize || 
+                    (board[newRow][newCol] && board[newRow][newCol] !== word[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function selectCell(cell) {
+            if (!gameStarted) return;
+
+            if (cell.classList.contains("found")) {
+                if (cell.classList.contains("marked")) {
+                    cell.classList.remove("marked");
+                } else {
+                    cell.classList.add("marked");
+                }
+                return;
+            }
+
+            if (selectedCells.includes(cell)) {
+                cell.classList.remove("selected");
+                selectedCells = selectedCells.filter(c => c !== cell);
+            } else {
+                if (!usedCells.has(cell)) {
+                    cell.classList.add("selected");
+                    selectedCells.push(cell);
+                }
+            }
+
+            const foundWord = checkSelectedWord();
+            if (foundWord.length > 0) {
+                foundWord.forEach(cell => {
+                    cell.classList.add("found");
+                    usedCells.add(cell);
+                });
+                updateWordList();
+                selectedCells = [];
+            }
+        }
+
+        function checkSelectedWord() {
+    if (!areCellsConnected(selectedCells)) return [];
+
+    const selectedLetters = selectedCells.map(cell => cell.textContent);
+    
+    for (let word of words) {
+        const wordLetters = word.split("");
+        
+        const allLettersMatch = wordLetters.every(letter => {
+            const index = selectedLetters.indexOf(letter);
+            if (index !== -1) {
+                selectedLetters.splice(index, 1);
+                return true;
+            }
+            return false;
+        });
+
+        if (allLettersMatch && !foundWords.includes(word) && areCellsInSameDirection(selectedCells)) {
+            foundWords.push(word);
+            return selectedCells;
+        }
+    }
+    return [];
+}
+
+function areCellsInSameDirection(cells) {
+    if (cells.length < 2) return true;
+
+    const firstCell = cells[0];
+    const firstRow = parseInt(firstCell.dataset.row);
+    const firstCol = parseInt(firstCell.dataset.col);
+
+    const direction = {
+        row: parseInt(cells[1].dataset.row) - firstRow,
+        col: parseInt(cells[1].dataset.col) - firstCol
+    };
+
+    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+    const divisor = gcd(Math.abs(direction.row), Math.abs(direction.col));
+    direction.row /= divisor;
+    direction.col /= divisor;
+
+    for (let i = 1; i < cells.length; i++) {
+        const currentRow = parseInt(cells[i].dataset.row);
+        const currentCol = parseInt(cells[i].dataset.col);
+        const currentDirection = {
+            row: currentRow - firstRow,
+            col: currentCol - firstCol
+        };
+
+        const currentGcd = gcd(Math.abs(currentDirection.row), Math.abs(currentDirection.col));
+        currentDirection.row /= currentGcd;
+        currentDirection.col /= currentGcd;
+
+        if (currentDirection.row !== direction.row || currentDirection.col !== direction.col) {
+            return false;
+        }
+    }
+    return true;
+}
+
+        function areCellsContiguous(cells) {
+            if (cells.length < 2) return true;
+
+            const directions = [
+                { row: 0, col: 1 }, 
+                { row: 1, col: 0 },  
+                { row: 1, col: 1 }, 
+                { row: -1, col: 1 },  
+                { row: 0, col: -1 }, 
+                { row: -1, col: 0 },  
+                { row: -1, col: -1 }, 
+                { row: 1, col: -1 } 
+            ];
+
+            for (let direction of directions) {
+                if (cells.every((cell, index) => {
+                    if (index === 0) return true;
+                    const prevCell = cells[index - 1];
+                    const currentRow = parseInt(cell.dataset.row);
+                    const currentCol = parseInt(cell.dataset.col);
+                    const prevRow = parseInt(prevCell.dataset.row);
+                    const prevCol = parseInt(prevCell.dataset.col);
+                    return (currentRow === prevRow + direction.row && currentCol === prevCol + direction.col);
+                })) {
+                    return true; 
+                }
+            }
+            return false; 
+        }
+
+        function areCellsConnected(cells) {
+            if (cells.length <= 1) return true;
+
+            let visited = new Set();
+            let stack = [cells[0]];
+            visited.add(cells[0]);
+
+            while (stack.length > 0) {
+                const current = stack.pop();
+                const row = parseInt(current.dataset.row);
+                const col = parseInt(current.dataset.col);
+
+                for (let i = 0; i < cells.length; i++) {
+                    const neighbor = cells[i];
+                    if (visited.has(neighbor)) continue;
+
+                    const nRow = parseInt(neighbor.dataset.row);
+                    const nCol = parseInt(neighbor.dataset.col);
+
+                    if (Math.abs(nRow - row) <= 1 && Math.abs(nCol - col) <= 1) {
+                        stack.push(neighbor);
+                        visited.add(neighbor);
+                    }
+                }
+            }
+
+            return visited.size === cells.length;
+        }
+
+        function updateWordList() {
+            const liList = wordList.children;
+            for (let i = 0; i < liList.length; i++) {
+                if (foundWords.includes(liList[i].dataset.word)) {
+                    liList[i].classList.add("found");
+                }
+            }
+
+            if (foundWords.length === words.length) {
+                clearInterval(timerInterval);
+                document.getElementById("winMessage").style.display = "block";
+                document.getElementById("resetButton").style.display = "inline-block";
+            }
+        }
+
+        function resetGame() {
+            timeLeft = 60;
+            document.getElementById("timer").textContent = timeLeft;
+            if (timerInterval) clearInterval(timerInterval);
+
+            selectedCells = [];
+            foundWords = [];
+            usedCells.clear();
+            generateGrid();
+
+            document.getElementById("winMessage").style.display = "none";
+            document.getElementById("loseMessage").style.display = "none";
+
+            document.getElementById("startButton").style.display = "inline";
+            document.getElementById("resetButton").style.display = "none";
+
+            gameStarted = false;
+
+            document.getElementById("category").style.display = "inline";
+            document.getElementById("difficulty").style.display = "inline";
+            document.querySelector('label[for="category"]').style.display = "inline";
+            document.querySelector('label[for="difficulty"]').style.display = "inline";
+
+            document.getElementById("category").disabled = false;
+            document.getElementById("difficulty").disabled = false;
+            document.getElementById("changeTimeButtonMinus").disabled = false;
+            document.getElementById("changeTimeButtonPlus").disabled = false;
+            document.getElementById("grid").style.display = "none";
+            document.getElementById("wordListContainer").style.display = "none";
+        }
+
+        function restartGame() {
+            if (timerInterval) clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById("timer").textContent = timeLeft;
+            selectedCells = [];
+            foundWords = [];
+            usedCells.clear();
+
+            document.getElementById("winMessage").style.display = "none";
+            document.getElementById("loseMessage").style.display = "none";
+
+            gameStarted = false;
+
+            document.getElementById("startButton").style.display = "inline";
+            document.getElementById("resetButton").style.display = "none";
+
+            document.getElementById("category").style.display = "inline";
+            document.getElementById("difficulty").style.display = "inline";
+            document.querySelector('label[for="category"]').style.display = "inline";
+            document.querySelector('label[for="difficulty"]').style.display = "inline";
+
+            document.getElementById("category").disabled = false;
+            document.getElementById("difficulty").disabled = false;
+            document.getElementById("changeTimeButtonMinus").disabled = false;
+            document.getElementById("changeTimeButtonPlus").disabled = false;
+
+            setDifficulty();
+            document.getElementById("grid").style.display = "none";
+            document.getElementById("wordListContainer").style.display = "none";
+        }
+    </script>
+</body>
+</html>
