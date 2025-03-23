@@ -277,15 +277,15 @@
         const wordCategories = {
             animals: {
                 easy: ["TATU", "NYÚL", "SAS", "HAL", "BÉKA"],
-                hard: ["HANGYÁSZ", "KROKODIL", "KENGURU", "CÁPA", "TEKNŐS"]
+                hard: ["HANGYÁSZ", "KROKODIL", "KENGURU", "CÁPA", "TARANTULA"]
             },
             countries: {
                 easy: ["DÁNIA", "JAPÁN", "PERU", "KUBA", "KINA"],
-                hard: ["BRAZÍLIA", "ARGENTÍNA", "NÉMETORSZÁG", "SPANYOL", "KANADA"]
+                hard: ["AUSZTRIA", "OLASZORSZÁG", "NÉMETORSZÁG", "SPANYOL", "KANADA"]
             },
             persons: {
                 easy: ["KARIGERI", "VIKTOR", "FERI", "MUSK", "TRUMP"],
-                hard: ["PUTYIN", "MATUSKA", "SZILÁGYI", "WEÖRES", "RÁKÓCZI"]
+                hard: ["PUTYIN", "MATUSKA", "SZILÁGYI", "HERCZEG", "RÁKÓCZI"]
             },
             brands: {
                 easy: ["NIKE", "ADIDAS", "PEPSI", "NOKIA", "KFC"],
@@ -424,14 +424,14 @@
     if (!areCellsConnected(selectedCells)) return [];
 
     const selectedLetters = selectedCells.map(cell => cell.textContent);
-    
+
     for (let word of words) {
         const wordLetters = word.split("");
-        
+
         const allLettersMatch = wordLetters.every(letter => {
             const index = selectedLetters.indexOf(letter);
             if (index !== -1) {
-                selectedLetters.splice(index, 1);
+                selectedLetters.splice(index, 1); // Használjuk fel a betűt
                 return true;
             }
             return false;
