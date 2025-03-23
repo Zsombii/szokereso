@@ -388,37 +388,34 @@
         }
 
         function selectCell(cell) {
-            if (!gameStarted) return;
+    if (!gameStarted) return;
 
-            if (cell.classList.contains("found")) {
-                if (cell.classList.contains("marked")) {
-                    cell.classList.remove("marked");
-                } else {
-                    cell.classList.add("marked");
-                }
-                return;
-            }
-
-            if (selectedCells.includes(cell)) {
-                cell.classList.remove("selected");
-                selectedCells = selectedCells.filter(c => c !== cell);
-            } else {
-                if (!usedCells.has(cell)) {
-                    cell.classList.add("selected");
-                    selectedCells.push(cell);
-                }
-            }
-
-            const foundWord = checkSelectedWord();
-            if (foundWord.length > 0) {
-                foundWord.forEach(cell => {
-                    cell.classList.add("found");
-                    usedCells.add(cell);
-                });
-                updateWordList();
-                selectedCells = [];
-            }
+    if (cell.classList.contains("found")) {
+        if (cell.classList.contains("marked")) {
+            cell.classList.remove("marked");
+        } else {
+            cell.classList.add("marked");
         }
+        return;
+    }
+
+    if (selectedCells.includes(cell)) {
+        cell.classList.remove("selected");
+        selectedCells = selectedCells.filter(c => c !== cell);
+    } else {
+        cell.classList.add("selected");
+        selectedCells.push(cell);
+    }
+
+    const foundWord = checkSelectedWord();
+    if (foundWord.length > 0) {
+        foundWord.forEach(cell => {
+            cell.classList.add("found");
+        });
+        updateWordList();
+        selectedCells = [];
+    }
+}
 
         function checkSelectedWord() {
     if (!areCellsConnected(selectedCells)) return [];
@@ -431,7 +428,7 @@
         const allLettersMatch = wordLetters.every(letter => {
             const index = selectedLetters.indexOf(letter);
             if (index !== -1) {
-                selectedLetters.splice(index, 1); // Használjuk fel a betűt
+                selectedLetters.splice(index, 1);
                 return true;
             }
             return false;
